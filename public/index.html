@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Socket.io</title>
+    <!-- Socket.io cdnjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"
+        integrity="sha512-9mpsATI0KClwt+xVZfbcf2lJ8IFBAwsubJ6mI3rtULwyM3fBmQFzj0It4tGqxLOGQwGfJdk/G+fANnxfq9/cew=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <form id="chat">
+        <input type="text" name="username" placeholder="Digite seu usuário" id="username">
+        <div class="messages"></div>
+        <input type="text" name="message" placeholder="Digite sua mensagem" id="message">
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script type="text/javascript">
+
+        // Estabelece conexão via socket.io através do link cdnjs
+        const socket = io('http://localhost:3000')
+
+        // Elementos do chat
+        const buttonForm = document.getElementsByTagName('button')[0]
+        const autor = document.getElementById('username')
+        const message = document.getElementById('message')
+        const boxMessages = document.getElementsByClassName('messages')[0]
+
+        const renderMessage = (message) => {
+            const mensagemCompleta = document.createElement('p')
+            boxMessages.appendChild(mensagemCompleta)
+
+            mensagemCompleta.innerHTML = `<strong>${message.autor}: <strong> ${message.message}`
+        }
+
+        socket.on('mensagensAnteriores', (messages) => {
+            console.log(messages)
+            for (let i = 0; i < messages.length; i++) {
+                renderMessage(messages[i])
+            }
+        })
+
+        // Renderiza mensagens de outros usuários
+        socket.on('receivedMessage', (message) => {
+            renderMessage(message)
+        })
+
+        // Escuta o submit do form pelo button
+        buttonForm.addEventListener('click', async (e) => {
+            e.preventDefault()
+            const autorValue = autor.value
+            const messageValue = message.value
+
+            if (autorValue.length && messageValue.length) {
+                const messageObject = {
+                    autor: autorValue,
+                    message: messageValue
+                }
+
+                socket.emit('sendMessage', messageObject)
+
+                await renderMessage(messageObject)
+
+                message.value = ''
+
+            }
+        })
+
+
+    </script>
+</body>
+
+</html>
